@@ -3,7 +3,7 @@ import json
 import logging
 from csv import DictWriter
 from glob import glob
-from os import makedirs
+from os import makedirs, remove
 from os.path import isfile
 from random import shuffle
 from threading import Thread, Semaphore
@@ -11,6 +11,7 @@ from time import sleep
 
 import requests
 from bs4 import BeautifulSoup
+from cffi.ffiplatform import get_extension
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 base_url = 'https://www.floridanegocio.com'
@@ -101,20 +102,38 @@ def process_category(cat_url, category_name, category_count):
             thread.join()
 
 def generate_csv():
+    logging.info("Generating CSV file from JSON data.")
     files = glob('json_/*.json')
+    if not files:
+        logging.warning("No JSON files found in 'json_' directory. Skipping CSV generation.")
+        return
+    rows_count=0
+    logging.info(f"Found {len(files)} JSON files to process for CSV generation.")
     with open('floridanegocio.csv', 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ['@id', 'name', 'image', 'address_streetAddress', 'address_addressLocality',
                       'address_addressRegion', 'address_addressCountry', 'telephone', 'url',
                       'geo_latitude', 'geo_longitude', 'email', 'description', 'tags',
-                      'Empleados','Establecimiento anual', 'Gerente de empresa','Persona de contacto']
+                      'Empleados','Establecimiento anual', 'Gerente de empresa','Persona de contacto',
+                      'Registro del IVA']
         writer = DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for file in files:
-            with open(file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                writer.writerow(data)
+            try:
+                with open(file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    if not data:
+                        logging.warning(f"Skipping empty JSON file: {file}")
+                        continue
+                    rows_count += 1
+                    writer.writerow(data)
+            except json.JSONDecodeError as e:
+                logging.error(f"Error decoding JSON from file {file}: {e}")
+                remove(file)
+                continue
+    logging.info(f"CSV file generated successfully with {rows_count} rows.")
 def main():
     logo()
+    generate_csv()
     makedirs('json_', exist_ok=True)
     logging.info(f"Starting to process business directory categories from {base_url}/browse-business-directory")
     url = f'{base_url}/browse-business-directory'
@@ -131,7 +150,7 @@ def main():
                 cat_count = a.find('span').text
                 cat_name = cat_text.replace(cat_count, '_')
                 process_category(category_url, cat_name, cat_count)
-                generate_csv()
+    generate_csv()
 
 
 
