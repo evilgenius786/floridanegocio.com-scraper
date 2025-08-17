@@ -11,7 +11,7 @@ from time import sleep
 
 import requests
 from bs4 import BeautifulSoup
-from cffi.ffiplatform import get_extension
+from wakepy import keep
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 base_url = 'https://www.floridanegocio.com'
@@ -218,4 +218,6 @@ def logo():
     sleep(1)
 
 if __name__ == '__main__':
-    main()
+
+    with keep.presenting():
+        main()
