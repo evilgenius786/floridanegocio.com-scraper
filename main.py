@@ -141,6 +141,7 @@ def main():
     icats = soup.find_all('ul', {'class': 'icats'})
     shuffle(icats)
     logging.info(f"Found {len(icats)} categories to process.")
+    threads = []
     for icat in icats:
         for li in icat.find_all('li'):
             a = li.find('a')
@@ -149,7 +150,14 @@ def main():
                 cat_text = a.get_text(strip=True)
                 cat_count = a.find('span').text
                 cat_name = cat_text.replace(cat_count, '_')
-                process_category(category_url, cat_name, cat_count)
+                # process_category(category_url, cat_name, cat_count)
+                thread = Thread(target=process_category, args=(category_url, cat_name, cat_count,))
+                thread.start()
+                threads.append(thread)
+    for thread in threads:
+        thread.join()
+    logging.info("All categories processed.")
+    logging.info("Generating CSV file from JSON data.")
     generate_csv()
 
 
