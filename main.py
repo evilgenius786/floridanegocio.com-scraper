@@ -15,9 +15,11 @@ from wakepy import keep
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 base_url = 'https://www.floridanegocio.com'
-posts_per_page=20
-threads_count=10
+posts_per_page = 20
+threads_count = 10
 semaphore = Semaphore(threads_count)
+
+
 def process_company(company_url):
     filename = './json_/' + company_url.split('/')[-1] + '.json'
     if isfile(filename):
@@ -74,10 +76,9 @@ def process_company(company_url):
         json.dump(data, f, ensure_ascii=False)
 
 
-
 def process_category(cat_url, category_name, category_count):
-    threads=[]
-    total_pages=int(category_count.replace(",","")) // posts_per_page + 1
+    threads = []
+    total_pages = int(category_count.replace(",", "")) // posts_per_page + 1
     pages = list(range(1, total_pages + 1))
     shuffle(pages)
     logging.info(f"Processing category: {category_name} with {category_count} companies across {total_pages} pages.")
@@ -101,21 +102,22 @@ def process_category(cat_url, category_name, category_count):
         for thread in threads:
             thread.join()
 
+
 def generate_csv():
     logging.info("Generating CSV file from JSON data.")
     files = glob('json_/*.json')
     if not files:
         logging.warning("No JSON files found in 'json_' directory. Skipping CSV generation.")
         return
-    rows_count=0
+    rows_count = 0
     logging.info(f"Found {len(files)} JSON files to process for CSV generation.")
     with open('floridanegocio.csv', 'w', newline='', encoding='utf-8') as csvfile:
         fieldnames = ['@id', 'name', 'image', 'address_streetAddress', 'address_addressLocality',
                       'address_addressRegion', 'address_addressCountry', 'telephone', 'url',
                       'geo_latitude', 'geo_longitude', 'email', 'description', 'tags',
-                      'Empleados','Establecimiento anual', 'Gerente de empresa','Persona de contacto',
+                      'Empleados', 'Establecimiento anual', 'Gerente de empresa', 'Persona de contacto',
                       'Registro del IVA']
-        writer = DictWriter(csvfile, fieldnames=fieldnames)
+        writer = DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
         writer.writeheader()
         for file in files:
             try:
@@ -131,6 +133,8 @@ def generate_csv():
                 remove(file)
                 continue
     logging.info(f"CSV file generated successfully with {rows_count} rows.")
+
+
 def main():
     logo()
     generate_csv()
@@ -161,8 +165,6 @@ def main():
     generate_csv()
 
 
-
-
 def getRes(url):
     # logging.info(f"Fetching URL: {url}")
     try:
@@ -181,10 +183,13 @@ def getSoup(url):
         return None
     return BeautifulSoup(html_content, 'html.parser')
 
+
 def cfDecodeEmail(encodedString):
     r = int(encodedString[:2], 16)
     email = ''.join([chr(int(encodedString[i:i + 2], 16) ^ r) for i in range(2, len(encodedString), 2)])
     return email
+
+
 def logo():
     print(rf"""
   __  _               _      _                                          _        
@@ -225,7 +230,7 @@ def logo():
 """)
     sleep(1)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     with keep.presenting():
         main()
