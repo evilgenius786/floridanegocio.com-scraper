@@ -1,35 +1,105 @@
-## floridanegocio.com scraper
-This is a web scraper for the website [floridanegocio.com](https://www.floridanegocio.com). It is designed to extract business information from the site.
-### Features
-- Scrapes business names, addresses, phone numbers, and other relevant details.
-- Saves the extracted data in a structured format (e.g., CSV, JSON).
-- Handles pagination to scrape multiple pages of listings.
-- Supports command-line arguments for customization (e.g., output format, number of pages to scrape).
-- Includes error handling for network issues and data extraction problems.
-- Can be run as a standalone script or integrated into larger data processing pipelines.
-- Includes unit tests to ensure the scraper works correctly.
-- Uses Python's `requests` and `BeautifulSoup` libraries for web scraping.
-- Follows best practices for web scraping, including respecting the site's `robots.txt` file and rate limiting requests to avoid overwhelming the server.
-- Can be easily extended to scrape additional
-- fields or handle different website structures.
-- Includes a configuration file for easy customization of scraping parameters.
-- Provides detailed logging for debugging and monitoring purposes.
-- Supports command-line arguments for specifying the output file format (e.g., CSV, JSON).
-- Includes a README file with usage instructions and examples.
-- Can be scheduled to run periodically using cron jobs or task schedulers.
-- Includes a Dockerfile for easy deployment in containerized environments.
-- Supports proxy rotation to avoid IP bans during scraping.
-- Implements a caching mechanism to store previously scraped data and avoid redundant requests.
-- Provides a user-friendly interface for configuring scraping parameters.
-- Includes a setup script for easy installation of dependencies.
-- Supports scraping from multiple categories or sections of the website.
-- Can be integrated with data visualization tools to analyze the scraped data.
-### Requirements
-- Python 3.x
-- `requests` library
-- `BeautifulSoup` library
-- `pandas` library (optional, for data manipulation)
-### Installation
-  1. Clone the repository:
-     ```bash
-     git clone https://github.com/evilgenius786
+# FloridaNegocio Business Directory Scraper
+
+This project is a Python-based scraper for [floridanegocio.com](https://www.floridanegocio.com).  
+It collects company information from the business directory, saves each company’s details as JSON, and compiles all results into a CSV file.
+
+---
+
+## Features
+
+- Scrapes business categories and company pages.
+- Extracts structured business data from embedded `application/ld+json` scripts.
+- Decodes Cloudflare-protected email addresses.
+- Saves each company as a JSON file in the `json_` folder.
+- Exports all collected data into a single CSV file (`floridanegocio.csv`).
+- Uses multithreading for faster scraping.
+- Includes logging for progress and error tracking.
+
+---
+
+## Extracted Fields
+
+Each company entry may include:
+
+- `@id`  
+- `name`  
+- `image`  
+- `address_streetAddress`  
+- `address_addressLocality`  
+- `address_addressRegion`  
+- `address_addressCountry`  
+- `telephone`  
+- `url`  
+- `geo_latitude`  
+- `geo_longitude`  
+- `email` (decoded if Cloudflare-protected)  
+- `description`  
+- `tags`  
+- Additional fields like **Empleados**, **Establecimiento anual**, **Gerente de empresa**, **Persona de contacto**, **Registro del IVA**
+
+---
+
+## Requirements
+
+- Python 3.8+
+- Packages listed in `requirements.txt`:
+
+```
+requests
+beautifulsoup4
+wakepy
+```
+
+---
+
+## Installation
+
+1. Clone this repository or copy the script.
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Usage
+
+Run the scraper with:
+
+```bash
+python scraper.py
+```
+
+### Workflow
+1. The script creates a `json_` folder if it does not exist.
+2. It scrapes all business categories from  
+   [https://www.floridanegocio.com/browse-business-directory](https://www.floridanegocio.com/browse-business-directory).
+3. Each company’s details are saved as an individual JSON file inside `json_/`.
+4. After scraping, all JSON data is combined into `floridanegocio.csv`.
+
+---
+
+## Output
+
+- **JSON files:** Stored in the `json_` directory.  
+- **CSV file:** `floridanegocio.csv` containing all extracted company data.  
+
+---
+
+## Logging
+
+The script logs its progress and errors to the console, including:
+
+- Category and page being processed  
+- Company URLs being scraped  
+- Warnings if files already exist  
+- Errors if pages fail to load or parse  
+
+---
+
+## Notes
+
+- Scraping large datasets may take time depending on network conditions.  
+- The script uses multithreading (`threads_count = 10`) to improve performance.  
+- If a JSON file is empty or corrupted, it is skipped or removed during CSV generation.  
